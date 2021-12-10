@@ -1,0 +1,167 @@
+scopeName: source.fgd
+
+repository:
+
+  numbers:
+    patterns:
+      - name: number.fgd
+        match: \b-?\d*(?:[.]?\d+)\b
+        comment: Integer/Decimal
+        captures:
+          '0':
+            name: constant.numeric.fgd
+          '1':
+            name: punctuation.separator.number.fgd
+
+  comments:
+    patterns:
+      - name: comment.line.double-slash.fgd
+
+        begin: '([\/][\/]+)'
+        beginCaptures:
+          '1': { name: punctuation.definition.comment.line.double-slash.fgd }
+
+        end: (?:(?=\n)|$)
+
+        patterns:
+          - name: meta.region.documentation.TODO.fgd
+            comment: >-
+              TODO: Find proper scope for name
+            match: '(@TODO)(?:(?=[\s]*$)|[ \t]+([^\n]*\S)\s*$)'
+            captures:
+              '1': { name: storage.type.class.documentation.fgd }
+              '2': { name: markup.other.todo.fgd }
+
+      # - name: comment.line.double-slash.fgd
+      #   match: ^\s*[\/]{2,}.*
+      #   comment: Single Line Comment
+
+  # TODO: This is a catchall for calls and signatures, to the extent there's any difference at
+  #       all
+
+  parameters:
+    patterns:
+      - name: punctuation.section.parameter.comma.fgd
+        match: \s*,\s*
+
+      - name: variable.parameter.fgd
+        match: '[a-zA-Z_]+'
+
+      - include: '#numbers'
+      - include: '#strings'
+      - include: '#brackets'
+
+  strings:
+    patterns:
+      - name: string.quoted.double.fgd
+        begin: '"'
+        end:   '"'
+
+  brackets:
+    patterns:
+      - begin: ([{])
+        end:   ([}])
+        patterns:
+          - include: '#strings'
+          - include: '#numbers'
+          - include: '#comments'
+
+
+patterns:
+
+- include: '#numbers'
+- include: '#comments'
+- include: '#strings'
+
+- name: keyword.control.import.include.fgd
+  match: \@include
+  comment: FGD Include
+
+- name: entity.name.entity.fgd
+  # keyword.fgd
+  match: \b(angle|angle_negative_pitch|axis|color1|color255|decal|filterclass|instance_file|instance_parm|instance_variable|material|node_dest|node_id|npcclass|origin|particlesystem|pointentityclass|scene|script|scriptlist|sidelist|sound|sprite|studio|target_destination|target_name_or_class|target_source|vecline|vector|integer|float|choices|flags|Flags|string)\b
+  # match: \b(axis|angle|color255|color1|filterclass|material|node_dest|npcclass|origin|pointentityclass|scene|sidelist|sound|sprite|studio|target_destination|target_name_or_class|target_source|vecline|vector|integer|float|choices|[F|f]lags|string)\b
+  comment: FGD Keyword
+
+- match: (?<=^[\s]+)(_sun_mangle|_sunlight|angle|color|count|delay|dmg|health|height|killtarget|light|lip|mangle|map|message|nextthink|noise|sounds|spawnflags|speed|style|t_length|t_width|target|targetname|think|touch|use|wait|worldtype)(\()([^)]*)(\))
+  captures:
+    '1':
+      name: entity.name.function.fgd
+    '2':
+      name: punctuation.section.parens.begin.fgd
+
+    '3':
+      patterns:
+        - include: '#parameters'
+    '4':
+      name: punctuation.section.parens.end.fgd
+
+- match: ^\s*(input|output) ([A-Z][^(]*)(\()([^)]*)(\)) (:)
+  comment: Input/Output Function
+  captures:
+    '1':
+      name: storage.type.function.fgd
+    '2':
+      name: entity.name.function.fgd
+    '3':
+      name: punctuation.section.function.begin.fgd
+    '4':
+      patterns:
+        - include: '#parameters'
+    '5':
+      name: punctuation.section.function.end.fgd
+
+- name: support.class.fgd
+  match: \@(BaseClass|baseclass|PointClass|NPCClass|SolidClass|KeyFrameClass|MoveClass|FilterClass)\b
+  comment: Entity Class Type
+
+- begin: \b(model)([\(])
+  beginCaptures:
+    '1':
+      name: support.class.fgd
+    '2':
+      name: punctuation.section.function.begin.fgd
+
+  end: ([\)])
+  endCaptures:
+    '1':
+      name: punctuation.section.function.end.fgd
+
+  patterns:
+    - include: '#parameters'
+
+- begin: \b(base|color|iconsprite|sphere|studio|studioprop|line|frustum|size)([\(])
+  beginCaptures:
+    '1':
+      name: support.class.fgd
+    '2':
+      name: punctuation.section.function.begin.fgd
+
+  end: ([\)])
+  endCaptures:
+    '1':
+      name: punctuation.section.function.end.fgd
+
+  patterns:
+    - include: '#parameters'
+
+# - match: \b(base|color|iconsprite|sphere|studio|studioprop|line|frustum|size)([\(])([^)]*)([\)])
+#   captures:
+#     '1':
+#       name: entity.name.function.fgd
+#     '2':
+#       name: punctuation.section.function.begin.fgd
+#     '3':
+#       patterns:
+#         - include: '#parameters'
+#     '4':
+#       name: punctuation.section.function.end.fgd
+
+- match: (=)[\s]+([a-zA-Z_]\w*)[\s]*(\:?)
+  comment: Entity Name Assignment
+  captures:
+    '1':
+      name: punctuation.section.storage.fgd
+    '2':
+      name: storage.type.function.fgd
+
